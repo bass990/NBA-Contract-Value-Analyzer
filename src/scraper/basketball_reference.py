@@ -42,7 +42,7 @@ def _read_table_through_comments(html: str, table_id: str) -> pd.DataFrame:
     The first call to pandas.read_html will miss them. We strip the comment
     wrapping first, then parse.
     """
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
 
     # First try: table is in the regular DOM.
     table = soup.find("table", id=table_id)
@@ -50,7 +50,7 @@ def _read_table_through_comments(html: str, table_id: str) -> pd.DataFrame:
     if table is None:
         # Fallback: pull every comment and look for the table inside.
         for comment in soup.find_all(string=lambda s: isinstance(s, Comment)):
-            inner = BeautifulSoup(comment, "lxml")
+            inner = BeautifulSoup(comment, "html.parser")
             candidate = inner.find("table", id=table_id)
             if candidate is not None:
                 table = candidate
