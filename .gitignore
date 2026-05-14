@@ -1,0 +1,39 @@
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Project: don't commit cached scrapes or trained models — they regenerate
+data/raw/_cache/
+data/raw/*.csv
+data/processed/*.pkl
+data/processed/*.csv
+
+# But DO commit a tracked-empty data/raw and data/processed folder
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# IDE / local tooling
+.vscode/
+.idea/
+*.swp
+.claude/
+build_notebook.py
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints
+
+# Streamlit secrets
+.streamlit/secrets.toml

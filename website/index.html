@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Contract Value Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <span class="nav-brand">NBA Contract Value</span>
+      <ul class="nav-links">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#explorer">Explorer</a></li>
+        <li><a href="#salary-calc">Salary Calculator</a></li>
+        <li><a href="#model">Model</a></li>
+        <li><a href="#methodology">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero" id="overview">
+    <div class="hero-inner">
+      <h1>NBA Contract Value Analyzer</h1>
+      <p class="hero-sub">
+        A machine learning system that predicts what each NBA player should earn
+        based on their current-season production, then surfaces where actual contracts
+        diverge from market rate.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span class="stat-number">0.741</span>
+          <span class="stat-label">Test R²</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">$1.39M</span>
+          <span class="stat-label">Mean Absolute Error</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">4</span>
+          <span class="stat-label">Seasons of Training Data</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">36</span>
+          <span class="stat-label">Model Features</span>
+        </div>
+      </div>
+      <a href="#explorer" class="btn-primary">Explore the Data</a>
+    </div>
+  </header>
+
+  <!-- Contract Explorer -->
+  <section class="section" id="explorer">
+    <div class="section-inner">
+      <h2>Contract Explorer</h2>
+      <p class="section-desc">
+        Browse player salary predictions from the 2024-25 season. Use the filters
+        to narrow by position or salary range, then sort by the overpayment gap to
+        find the most notable discrepancies.
+      </p>
+
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Position</label>
+          <div class="toggle-group" id="pos-filter">
+            <button class="toggle active" data-pos="ALL">All</button>
+            <button class="toggle" data-pos="PG">PG</button>
+            <button class="toggle" data-pos="SG">SG</button>
+            <button class="toggle" data-pos="SF">SF</button>
+            <button class="toggle" data-pos="PF">PF</button>
+            <button class="toggle" data-pos="C">C</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>Sort by</label>
+          <select id="sort-select">
+            <option value="overpaid">Most Overpaid</option>
+            <option value="underpaid">Most Underpaid</option>
+            <option value="actual_desc">Highest Actual Salary</option>
+            <option value="predicted_desc">Highest Predicted Salary</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Min minutes/game: <span id="mp-val">15</span></label>
+          <input type="range" id="mp-filter" min="0" max="38" value="15" step="1" />
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="player-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Pos</th>
+              <th>Age</th>
+              <th>MP/g</th>
+              <th>Actual</th>
+              <th>Predicted</th>
+              <th>Gap</th>
+              <th>Verdict</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        Gap = Predicted − Actual. Negative gap means the model predicts less than the contract (overpaid). Positive gap means the model predicts more (underpaid).
+      </p>
+    </div>
+  </section>
+
+  <!-- Salary Calculator -->
+  <section class="section section-alt" id="salary-calc">
+    <div class="section-inner">
+      <h2>Salary Estimator</h2>
+      <p class="section-desc">
+        Enter a hypothetical player's statistics and see what the model would estimate
+        as their market salary. This uses the same feature logic as the trained pipeline —
+        per-36 normalization, position pay curves, and age polynomial.
+      </p>
+
+      <div class="calc-grid">
+        <div class="calc-col">
+          <h3>Player Profile</h3>
+          <div class="form-row">
+            <label>Age</label>
+            <input type="number" id="c-age" value="26" min="19" max="40" />
+          </div>
+          <div class="form-row">
+            <label>Position</label>
+            <select id="c-pos">
+              <option value="PG">PG</option>
+              <option value="SG">SG</option>
+              <option value="SF">SF</option>
+              <option value="PF">PF</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Games Played</label>
+            <input type="number" id="c-g" value="65" min="1" max="82" />
+          </div>
+          <div class="form-row">
+            <label>Minutes/game</label>
+            <input type="number" id="c-mp" value="30" min="1" max="38" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label>Games Started</label>
+            <input type="number" id="c-gs" value="55" min="0" max="82" />
+          </div>
+        </div>
+
+        <div class="calc-col">
+          <h3>Production Stats</h3>
+          <div class="form-row">
+            <label>Points/game</label>
+            <input type="number" id="c-pts" value="18" min="0" max="45" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label>Rebounds/game</label>
+            <input type="number" id="c-trb" value="5" min="0" max="20" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label>Assists/game</label>
+            <input type="number" id="c-ast" value="4" min="0" max="15" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label>FG%</label>
+            <input type="number" id="c-fgp" value="0.47" min="0" max="1" step="0.01" />
+          </div>
+          <div class="form-row">
+            <label>3P%</label>
+            <input type="number" id="c-3pp" value="0.37" min="0" max="1" step="0.01" />
+          </div>
+        </div>
+
+        <div class="calc-col">
+          <h3>Advanced Stats</h3>
+          <div class="form-row">
+            <label>PER</label>
+            <input type="number" id="c-per" value="18" min="0" max="35" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label>Win Shares</label>
+            <input type="number" id="c-ws" value="5" min="-5" max="20" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label>BPM</label>
+            <input type="number" id="c-bpm" value="1.5" min="-10" max="15" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label>VORP</label>
+            <input type="number" id="c-vorp" value="2.0" min="-1" max="12" step="0.1" />
+          </div>
+          <div class="form-row">
+            <label>USG%</label>
+            <input type="number" id="c-usg" value="22" min="5" max="40" step="0.1" />
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-result" id="calc-result">
+        <button class="btn-primary" id="calc-btn">Estimate Salary</button>
+        <div class="result-display" id="result-display" style="display:none;">
+          <div class="result-main">
+            <span class="result-label">Estimated Market Salary</span>
+            <span class="result-value" id="result-salary">—</span>
+          </div>
+          <div class="result-breakdown" id="result-breakdown"></div>
+          <p class="result-note">
+            Estimate based on a regression model trained on 2022-2024 NBA salary data.
+            Does not account for contract timing, roster context, or market size.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Model Performance -->
+  <section class="section" id="model">
+    <div class="section-inner">
+      <h2>Model Performance</h2>
+      <p class="section-desc">
+        The model was trained on seasons 2022-2024 and evaluated on the held-out 2024-25 season.
+        The time-series split prevents future salary-cap information from leaking into historical predictions.
+      </p>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-value">0.741</div>
+          <div class="metric-name">R² — Test Season</div>
+          <div class="metric-desc">
+            The model explains 74.1% of salary variance from statistical performance.
+            The remaining 26% reflects contract timing, market premiums, and factors not in the stats.
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">$1.39M</div>
+          <div class="metric-name">Mean Absolute Error</div>
+          <div class="metric-desc">
+            Average prediction error in dollars. Roughly equivalent to one mid-level exception —
+            within range for a stats-only model that cannot observe off-court factors.
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value">90</div>
+          <div class="metric-name">Boosting Rounds</div>
+          <div class="metric-desc">
+            Model converged at round 90 with early stopping (patience = 50 rounds).
+            Prevents overfitting on the small training set without manual round selection.
+          </div>
+        </div>
+      </div>
+
+      <h3 class="subsection-title">Feature Importance — Top 15 by Gain</h3>
+      <div class="importance-chart">
+        <div class="importance-bar-container" id="importance-chart"></div>
+      </div>
+      <p class="table-note">
+        Win Shares is the single strongest predictor — it is also the composite stat most frequently cited in contract negotiations.
+        Age and VORP round out the top three. Raw counting stats (PTS, REB) are less predictive than efficiency composites at equivalent roles.
+      </p>
+    </div>
+  </section>
+
+  <!-- Methodology -->
+  <section class="section section-alt" id="methodology">
+    <div class="section-inner">
+      <h2>Methodology</h2>
+
+      <div class="method-grid">
+        <div class="method-card">
+          <h3>Data Acquisition</h3>
+          <p>
+            Per-game and advanced statistics scraped from Basketball-Reference.com using
+            a polite HTTP client with disk-level caching, 3-second request delays per
+            robots.txt, and exponential-backoff retries. A synthetic fallback generator
+            reproduces realistic NBA stat distributions when the scraper is unavailable.
+          </p>
+          <p>
+            Salary data from a curated dataset of ~75 well-known player-season contracts.
+            Full-league coverage requires a once-per-season manual download from HoopsHype,
+            which Cloudflare-protects against automated scraping.
+          </p>
+        </div>
+
+        <div class="method-card">
+          <h3>Feature Engineering</h3>
+          <p>
+            <strong>Per-36 stats:</strong> normalize counting stats to 36 minutes of play.
+            Decouples production rate from role — a player averaging 12 PPG in 20 minutes
+            reads identically to one in 36 minutes per-game, but very differently per-36.
+          </p>
+          <p>
+            <strong>Position dummies:</strong> one-hot encode the five positions. Guards and
+            centers face different supply curves (~120 guards vs. ~30 starting centers in
+            the league), producing distinct pay structures at the same performance level.
+          </p>
+          <p>
+            <strong>Age polynomial:</strong> Age + Age² + is_prime (25-30). Career earning
+            arcs are non-monotonic; a linear age term misses both the rookie-scale floor
+            and the post-32 market discount.
+          </p>
+        </div>
+
+        <div class="method-card">
+          <h3>Modeling</h3>
+          <p>
+            <strong>Algorithm:</strong> LightGBM (gradient boosted decision trees).
+            With ~1,000 training rows across three seasons, gradient boosting outperforms
+            neural networks on this tabular, heterogeneous feature set.
+          </p>
+          <p>
+            <strong>Target:</strong> log(salary_usd). Salaries span two orders of magnitude
+            ($1M to $55M+). The log transform makes the regression loss symmetric across
+            the full salary range rather than optimizing only for superstar prediction accuracy.
+          </p>
+          <p>
+            <strong>Validation:</strong> time-series split — train on 2022-2024, evaluate
+            on 2025. Random K-fold would leak future cap information into historical predictions.
+          </p>
+        </div>
+
+        <div class="method-card">
+          <h3>Limitations</h3>
+          <p>
+            Teams pay for factors outside the stats: market size, locker-room dynamics,
+            injury risk beyond games played, and front-office relationships. The model
+            cannot observe these.
+          </p>
+          <p>
+            Contracts signed in prior seasons compare against current market rates.
+            Cap-inflation features partially correct for this but do not fully resolve
+            the comparison for multi-year deals signed at prior peak values.
+          </p>
+          <p>
+            Model predictions compress toward the mean at distribution extremes —
+            max-contract predictions are systematically below actual, near-minimum
+            predictions slightly above.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <strong>NBA Contract Value Analyzer</strong>
+        <p>An end-to-end ML system for evaluating NBA salary efficiency.</p>
+      </div>
+      <div class="footer-col">
+        <strong>Links</strong>
+        <ul>
+          <li><a href="https://github.com/bass990/nba-contract-value" target="_blank">GitHub Repository</a></li>
+          <li><a href="https://nba-contract-value.streamlit.app" target="_blank">Streamlit Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <strong>Author</strong>
+        <p>Mamadou Bassirou Diallo<br>MS Business Analytics &amp; AI<br>UT Dallas</p>
+        <a href="https://www.linkedin.com/in/mamadou9905" target="_blank">LinkedIn</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      Data source: Basketball-Reference.com. Salary data: publicly reported contract figures.
+      Model trained on 2022-2025 NBA seasons.
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
