@@ -160,6 +160,22 @@ st.markdown("""<style>
   background: #fff; border: 2px dashed var(--gray-200) !important;
   border-radius: var(--radius) !important;
 }
+[data-testid="stFileUploader"] section {
+  padding: 1.5rem 1rem !important;
+  min-height: unset !important;
+}
+[data-testid="stFileUploader"] section > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: .5rem !important;
+}
+[data-testid="stFileUploaderDropzone"] label {
+  white-space: normal !important;
+  text-align: center !important;
+  line-height: 1.4 !important;
+  font-size: .875rem !important;
+}
 div[data-baseweb="select"] > div { border-color: var(--gray-200) !important; border-radius: 6px !important; }
 div[data-baseweb="input"] > div  { border-color: var(--gray-200) !important; border-radius: 6px !important; }
 [data-testid="stSlider"] [role="slider"] { background: var(--blue) !important; }
