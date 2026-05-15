@@ -682,8 +682,8 @@ st.markdown("""
     <div class="footer-col">
       <strong>Links</strong>
       <ul>
-        <li><a href="https://github.com/bass990/nba-contract-value" target="_blank">GitHub Repository</a></li>
-        <li><a href="docs/REPORT.md" target="_blank">Analysis Report</a></li>
+        <li><a href="https://github.com/bass990/NBA-Contract-Value-Analyzer" target="_blank">GitHub Repository</a></li>
+        <li><a href="https://github.com/bass990/NBA-Contract-Value-Analyzer/blob/main/docs/REPORT.md" target="_blank">Analysis Report</a></li>
       </ul>
     </div>
     <div class="footer-col">
