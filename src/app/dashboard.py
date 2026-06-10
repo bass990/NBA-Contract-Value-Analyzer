@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import sys
 import warnings
-import io
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -171,6 +170,29 @@ div[data-baseweb="input"] > div  { border-color: var(--gray-200) !important; bor
 /* ── Subsection title ── */
 .subsec { font-size: 1.125rem; font-weight: 600; color: var(--text); margin: 2.5rem 0 1rem; }
 
+/* ── Honest-disclosure banners ── */
+.disclosure-hero {
+  margin: 1.75rem auto 0; max-width: 720px;
+  background: rgba(245, 158, 11, .12);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: .75rem 1rem;
+  font-size: .8125rem; color: #fbbf24;
+  text-align: left; line-height: 1.6;
+}
+.disclosure-hero strong { color: #fff; }
+.disclosure-hero a { color: var(--accent); text-decoration: underline; }
+.disclosure-section {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  font-size: .875rem; color: #78350f;
+  line-height: 1.65; margin-bottom: 2rem;
+}
+.disclosure-section strong { color: #92400e; }
+
 @media (max-width: 900px) {
   .stat-cards { grid-template-columns: repeat(2,1fr); }
   .metrics-grid { grid-template-columns: 1fr; }
@@ -319,6 +341,9 @@ st.markdown("""
       <div class="stat-card"><span class="stat-number">$1.39M</span><span class="stat-label">Mean Absolute Error</span></div>
       <div class="stat-card"><span class="stat-number">4</span><span class="stat-label">Seasons of Training Data</span></div>
       <div class="stat-card"><span class="stat-number">36</span><span class="stat-label">Model Features</span></div>
+    </div>
+    <div class="disclosure-hero">
+      <strong>Honest disclosure:</strong> Numbers shown are from a <strong>1,400-row synthetic demo run</strong> — the reproducibility fallback. On the real-data path (scraped stats joined against a hand-curated ~75-row salary set), development runs land in <strong>R² 0.68 – 0.74</strong>. Methodology is identical; only the data source differs. Salary sources (Spotrac, HoopsHype) are Cloudflare-gated, which is the reason for the small real-data salary set. See <a href="#methodology">Methodology</a>.
     </div>
   </div>
 </div>
@@ -574,6 +599,12 @@ with st.container():
         unsafe_allow_html=True,
     )
     st.markdown("""
+    <div class="disclosure-section">
+      <strong>Data mode — synthetic demo run.</strong>
+      The metrics below are from a 1,400-row synthetic-data run, the pipeline's reproducibility fallback when Basketball-Reference is unreachable or salary sources are unavailable.
+      On the real-data path the model trains on scraped Basketball-Reference stats joined against a hand-curated ~75-row salary set; development runs in that mode land in the <strong>R² 0.68 – 0.74</strong> range with higher dollar MAE due to greater variance in real NBA contracts.
+      Methodology is identical between the two paths; only the data source differs.
+    </div>
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-value">0.741</div>

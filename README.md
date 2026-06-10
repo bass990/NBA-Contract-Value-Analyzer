@@ -1,9 +1,13 @@
 # NBA Contract Value Analyzer
 
+[![CI](https://github.com/bass990/nba-contract-value/actions/workflows/ci.yml/badge.svg)](https://github.com/bass990/nba-contract-value/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](./runtime.txt)
+
 **Are NBA teams getting fair value from their contracts?**  
 An end-to-end machine learning system that scrapes current player stats, predicts a market-rate salary for each player, and ranks the league's most overpaid and underpaid deals.
 
-**[Methodology](./docs/METHODOLOGY.md)** — **[Report](./docs/REPORT.md)**
+**[Methodology](./docs/METHODOLOGY.md)** — **[Report](./docs/REPORT.md)** — **[Deploy Notes](./huggingface-spaces/deployment_notes.md)**
 
 ---
 
@@ -23,36 +27,42 @@ This project answers that question for every NBA player on a current deal, surfa
 
 ## Results
 
-Model performance on the held-out 2024-25 season:
+> **Honest disclosure.** The numbers below are from a **1,400-row synthetic-data demo run** — the reproducibility fallback the pipeline uses when Basketball-Reference is unavailable or when the salary sources (Spotrac, HoopsHype) can't be reached. Both salary sources sit behind Cloudflare bot protection; bypassing them needs residential proxies or headless browser + CAPTCHA solving, neither of which belongs in a public portfolio project. On the real-data path, the pipeline scrapes Basketball-Reference for stats and joins them against a hand-curated **~75-row** salary dataset; development runs in that mode land in the **R² 0.68 – 0.74** range with higher dollar MAE due to greater variance in real NBA contracts. Methodology is identical between paths; only the data source differs. The synthetic vs. real-data tradeoff is documented in [METHODOLOGY.md §2](./docs/METHODOLOGY.md) and [REPORT.md §Data](./docs/REPORT.md).
+
+Synthetic-run performance on the held-out 2025 season (350 players):
 
 | Metric | Value |
 |---|---|
-| R² | 0.741 |
+| R² (log salary) | 0.741 |
 | MAE (log scale) | 0.293 |
 | MAE (dollars) | $1,390,130 |
 | Training rounds | 90 (early stopping) |
 
 The top five predictors by LightGBM feature gain: **Win Shares, Age, VORP, PER, BPM**. Composite efficiency stats outperform raw counting stats — consistent with how front offices actually evaluate players in contract negotiations.
 
-The 26% of unexplained variance reflects real-world factors the model cannot observe: contract timing relative to cap growth, market-size premiums, injury history, and negotiating leverage.
+The ~26% of unexplained variance reflects real-world factors the model cannot observe: contract timing relative to cap growth, market-size premiums, injury history, and negotiating leverage.
 
 ## Project Structure
 
 ```
 nba-contract-value/
 ├── src/
-│   ├── scraper/           # Basketball-Reference scraper (polite, cached, retry logic)
-│   ├── pipeline/          # Feature engineering: per-36, position dummies, age poly
-│   ├── model/             # LightGBM training, Optuna tuning, evaluation
-│   └── app/               # Streamlit dashboard
+│   ├── scraper/                # Basketball-Reference scraper (polite, cached, retry logic)
+│   ├── pipeline/               # Feature engineering: per-36, position dummies, age poly
+│   ├── model/                  # LightGBM training, Optuna tuning, evaluation
+│   └── app/                    # Streamlit dashboard
 ├── data/
-│   ├── raw/               # Scraped HTML cache and parsed CSVs
-│   └── processed/         # Feature table, trained model, predictions CSV
-├── notebooks/             # End-to-end pipeline notebook with embedded outputs
-├── tests/                 # Unit tests for feature pipeline
-├── docs/                  # Methodology writeup and evaluation report
-├── website/               # Standalone HTML/CSS/JS site
-├── Makefile               # make all / make scrape / make train / make app
+│   ├── raw/                    # Scraped HTML cache and parsed CSVs
+│   └── processed/              # Feature table, trained model, predictions CSV
+├── notebooks/                  # End-to-end pipeline notebook with embedded outputs
+├── tests/                      # 15 pytest unit tests over the feature pipeline
+├── docs/                       # Methodology writeup and evaluation report
+├── website/                    # Standalone HTML/CSS/JS site
+├── huggingface-spaces/         # HF Spaces deploy artifacts (app.py, requirements.txt, README, notes)
+├── .github/workflows/ci.yml    # Lint (ruff) + tests (pytest) on every push / PR to main
+├── Makefile                    # make all / make scrape / make train / make app / make test
+├── LICENSE                     # MIT
+├── ruff.toml                   # Lint config — respects existing compact-style code
 └── requirements.txt
 ```
 
@@ -96,6 +106,10 @@ Full reasoning, including alternatives considered, is in [`docs/METHODOLOGY.md`]
 ## Tech Stack
 
 Python 3.11+ — `requests` + `beautifulsoup4` for scraping — `pandas` for ETL — `lightgbm` + `scikit-learn` + `optuna` for modeling — `streamlit` + `plotly` for the dashboard
+
+## License
+
+[MIT](./LICENSE). Basketball-Reference data is the property of Sports Reference LLC and is used for personal, non-commercial purposes; NBA team and player names are trademarks of their respective owners.
 
 ## Author
 
