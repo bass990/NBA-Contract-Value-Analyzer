@@ -1,0 +1,19 @@
+# Ruff configuration — keeps CI honest about real bugs without churning the
+# existing compact-style code throughout the codebase.
+
+line-length = 120
+target-version = "py311"
+
+[lint]
+# Default rules (E, F, etc.) catch real bugs (unused imports, undefined names,
+# syntax issues). Style preferences that match the existing code are ignored:
+#   E701 — `if cond: body` on one line (used throughout dashboard.py)
+#   E702 — `stmt; stmt` on one line (used throughout dashboard.py)
+#   E501 — line-too-long (matplotlib/plotly config lines are long by nature)
+ignore = ["E701", "E702", "E501"]
+
+[lint.per-file-ignores]
+# Tests use bare asserts and may import extras for setup
+"tests/**" = ["S101"]
+# Dashboard module includes a large inline HTML/CSS string and ad-hoc data
+"src/app/dashboard.py" = ["E741"]
