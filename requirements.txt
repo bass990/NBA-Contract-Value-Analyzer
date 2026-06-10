@@ -8,7 +8,7 @@ numpy>=2.0.0
 scikit-learn>=1.5.2
 lightgbm>=4.5.0
 optuna>=4.0.0
-shap>=0.46.0
+shap>=0.47.0  # 0.46.x has a NumPy-2.x incompatibility in shap.plots.colors (np.dtype(np.floating))
 matplotlib>=3.9.0
 pillow>=11.0.0
 
