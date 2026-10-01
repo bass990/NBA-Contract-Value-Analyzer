@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import pandas as pd
 from bs4 import BeautifulSoup, Comment

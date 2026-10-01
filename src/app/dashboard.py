@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import sys
 import warnings
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
@@ -296,7 +297,7 @@ def parse_upload(file) -> tuple[pd.DataFrame, str | None]:
             if col not in df.columns:
                 df[col] = np.nan
         return df, None
-    except Exception as e:
+    except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         return pd.DataFrame(), str(e)
 
 
@@ -307,7 +308,8 @@ def load_model_bundle():
     try:
         from src.model.score import load_model
         return load_model(MODEL_PATH)
-    except Exception:
+    except (OSError, ImportError, KeyError, ValueError, AttributeError):
+        # A bundle from another lightgbm/pickle version: fall back to the heuristic estimator.
         return None
 
 
@@ -468,11 +470,11 @@ with st.container():
     lo = float(min(view["actual_usd"].min(), view["predicted_usd"].min()))
     hi = float(max(view["actual_usd"].max(), view["predicted_usd"].max()))
     fig_sc.add_shape(type="line", x0=lo, y0=lo, x1=hi, y1=hi,
-                     line=dict(color="#94a3b8", dash="dash", width=1.5))
+                     line={"color": "#94a3b8", "dash": "dash", "width": 1.5})
     fig_sc.update_layout(
         height=480, plot_bgcolor="white", paper_bgcolor="white",
-        legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        font=dict(size=13), xaxis=dict(gridcolor="#f1f5f9"), yaxis=dict(gridcolor="#f1f5f9"),
+        legend={"title": "", "orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        font={"size": 13}, xaxis={"gridcolor": "#f1f5f9"}, yaxis={"gridcolor": "#f1f5f9"},
     )
     st.plotly_chart(fig_sc, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -535,14 +537,16 @@ if st.button("Estimate Salary", type="primary", use_container_width=True):
     bundle = load_model_bundle()
     if bundle is not None:
         try:
-            from src.model.score import score_single_player, _align_features
             import shap as shap_lib
+
+            from src.model.score import _align_features, score_single_player
             est = score_single_player(bundle, hyp)
             X_hyp = _align_features(bundle, pd.DataFrame([hyp]))
             _exp   = shap_lib.TreeExplainer(bundle["model"])
             shap_vals = _exp(X_hyp)
-        except Exception:
-            pass
+        except (ImportError, ValueError, TypeError, KeyError):
+            # shap missing or the explainer rejecting the model: keep the estimate, skip the chart.
+            shap_vals = None
 
     if est is None:
         pts36 = c_pts * 36 / safe_mp; ast36 = c_ast * 36 / safe_mp
@@ -577,8 +581,8 @@ if st.button("Estimate Salary", type="primary", use_container_width=True):
             "**Red bars** push the prediction up · **Blue bars** pull it down. "
             "Starting from the average log-salary baseline, features combine to reach the final value."
         )
-        import shap as shap_lib
         import matplotlib.pyplot as plt
+        import shap as shap_lib
         shap_lib.plots.waterfall(shap_vals[0], max_display=12, show=False)
         st.pyplot(plt.gcf(), use_container_width=True)
         plt.close()
@@ -639,9 +643,9 @@ with st.container():
         hovertemplate="%{y}: %{x:,.1f}<extra></extra>",
     ))
     fig_imp.update_layout(
-        height=430, margin=dict(l=10, r=20, t=10, b=40),
+        height=430, margin={"l": 10, "r": 20, "t": 10, "b": 40},
         xaxis_title="LightGBM gain", plot_bgcolor="white", paper_bgcolor="white",
-        xaxis=dict(gridcolor="#f1f5f9"), font=dict(size=13),
+        xaxis={"gridcolor": "#f1f5f9"}, font={"size": 13},
     )
     st.plotly_chart(fig_imp, use_container_width=True)
     st.caption(

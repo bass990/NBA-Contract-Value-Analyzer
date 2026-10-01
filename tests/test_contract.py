@@ -22,9 +22,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from api import monitoring  # noqa: E402
-from api.main import app  # noqa: E402
-from src.model.score import load_model  # noqa: E402
+from api import monitoring
+from api.main import app
+from src.model.score import load_model
 
 GOLDEN_PATH = PROJECT_ROOT / "tests" / "golden_predictions.json"
 BUNDLE = load_model(PROJECT_ROOT / "data" / "processed" / "model.pkl")

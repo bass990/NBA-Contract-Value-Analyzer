@@ -36,8 +36,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from api.monitoring import MIN_ROWS_FOR_DRIFT, drift_report, is_stale  # noqa: E402
-from api.schemas import (  # noqa: E402
+from api.monitoring import MIN_ROWS_FOR_DRIFT, drift_report, is_stale
+from api.schemas import (
     BatchRequest,
     DriftResponse,
     HealthResponse,
@@ -46,8 +46,8 @@ from api.schemas import (  # noqa: E402
     Prediction,
     PredictResponse,
 )
-from src.model.score import _align_features, load_model, predict_salary  # noqa: E402
-from src.pipeline.features import (  # noqa: E402
+from src.model.score import _align_features, load_model, predict_salary
+from src.pipeline.features import (
     add_age_features,
     add_per_36,
     add_position_dummies,

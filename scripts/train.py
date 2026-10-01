@@ -26,7 +26,7 @@ import argparse
 import json
 import pickle
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import lightgbm as lgb
@@ -37,9 +37,9 @@ from sklearn.metrics import mean_absolute_error, r2_score
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.model.train import _prepare_xy  # noqa: E402
-from src.pipeline.features import MODEL_FEATURES, build_feature_table  # noqa: E402
-from src.pipeline.synthetic import generate_synthetic_dataset  # noqa: E402
+from src.model.train import _prepare_xy
+from src.pipeline.features import MODEL_FEATURES, build_feature_table
+from src.pipeline.synthetic import generate_synthetic_dataset
 
 DEFAULT_PARAMS = {"learning_rate": 0.05, "num_leaves": 31, "min_data_in_leaf": 15, "feature_fraction": 0.85,
                   "bagging_fraction": 0.85, "lambda_l2": 1.0}
@@ -66,7 +66,7 @@ def _reference(X: pd.DataFrame, log_preds: np.ndarray, seasons: list[int]) -> di
         feats[c] = {"edges": edges, "share": [float(v) / counts.sum() for v in counts]}
     p_edges = _edges(log_preds)
     p_counts, _ = np.histogram(log_preds, bins=np.asarray(p_edges))
-    return {"source": "synthetic seed 42, training seasons", "n_rows": int(len(X)), "seasons": seasons, "features": feats,
+    return {"source": "synthetic seed 42, training seasons", "n_rows": len(X), "seasons": seasons, "features": feats,
             "prediction": {"edges": p_edges, "share": [float(v) / p_counts.sum() for v in p_counts],
                            "median_usd": float(np.exp(np.median(log_preds)))}}
 
@@ -126,12 +126,12 @@ def main() -> int:
     importance = sorted(zip(X_tr.columns, model.feature_importance(importance_type="gain"), strict=True), key=lambda kv: -kv[1])
     top_features = [{"feature": f, "gain_share": round(float(g) / float(sum(v for _, v in importance)), 4)} for f, g in importance[:10]]
 
-    trained_at = datetime.now(timezone.utc).isoformat()
+    trained_at = datetime.now(UTC).isoformat()
     bundle = {
         "model": model, "best_params": DEFAULT_PARAMS, "features": MODEL_FEATURES,
         "test_r2": r2, "test_mae_log": mae_log, "test_mae_usd": mae_usd,
         "test_season": args.test_season, "validation_season": val_season, "training_seasons": sorted(int(s) for s in train_df.season.unique()),
-        "n_train": int(len(X_tr)), "n_test": int(len(X_te)), "trained_at": trained_at, "seed": args.seed,
+        "n_train": len(X_tr), "n_test": len(X_te), "trained_at": trained_at, "seed": args.seed,
         "data_source": "synthetic (src/pipeline/synthetic.py, seed 42); see README honest disclosure",
         "residual_quantiles_log": {"q10": q10, "q50": q50, "q90": q90},
         "interval_coverage_80_test": coverage,

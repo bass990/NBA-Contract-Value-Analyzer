@@ -20,9 +20,9 @@ from sklearn.metrics import r2_score
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.model.score import score_players  # noqa: E402
-from src.pipeline.features import build_feature_table  # noqa: E402
-from src.pipeline.synthetic import generate_synthetic_dataset  # noqa: E402
+from src.model.score import score_players
+from src.pipeline.features import build_feature_table
+from src.pipeline.synthetic import generate_synthetic_dataset
 
 COLUMNS = ["Player", "season", "actual_usd", "predicted_usd", "residual_usd", "pct_off", "Pos_primary", "Age", "MP"]
 

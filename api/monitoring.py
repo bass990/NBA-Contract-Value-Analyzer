@@ -52,7 +52,7 @@ def drift_report(features: pd.DataFrame, reference: dict, predictions_usd: np.nd
         value = psi(np.asarray(ref["share"]), _hist_share(col, ref["edges"]))
         per_feature[name] = {"psi": round(value, 4), "status": _status(value)}
     out = {
-        "n_rows": int(len(features)),
+        "n_rows": len(features),
         "reference": {"source": reference.get("source"), "n_rows": reference.get("n_rows"), "seasons": reference.get("seasons")},
         "features": per_feature,
         "n_shifted": sum(1 for v in per_feature.values() if v["status"] == "shifted"),
