@@ -6,37 +6,44 @@ on:
   pull_request:
     branches: [main]
 
+# Lint; the feature-pipeline + API contract + golden + drift tests against the
+# committed model bundle; a determinism check that retrains from the synthetic
+# seed and must reproduce the bundle's held-out metrics; then a Docker smoke
+# test of the inference image. No scraping, no network.
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11"]
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
           cache: pip
-          cache-dependency-path: requirements.txt
-
-      - name: Install dependencies
+          cache-dependency-path: requirements-api.txt
+      - name: Install inference + test deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-api.txt
+          pip install pytest httpx ruff
+      - name: Lint
+        run: ruff check src tests api scripts
+      - name: Tests (includes retrain-and-compare determinism check)
+        run: pytest tests/ -q
 
-      - name: Lint with ruff
+  docker-smoke:
+    runs-on: ubuntu-latest
+    needs: [lint-and-test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t nba-api:ci .
+      - name: Smoke test
         run: |
-          ruff check src tests
-        continue-on-error: false
-
-      - name: Run tests
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          pytest tests/ -v --tb=short
+          docker run -d --name nba -p 8000:8000 nba-api:ci
+          for i in $(seq 1 40); do curl -sf http://localhost:8000/health && break; sleep 2; done
+          curl -sf http://localhost:8000/health | grep -q '"model_loaded":true'
+          curl -sf http://localhost:8000/model-info | grep -q '"n_features":36'
+          curl -sf -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d @tests/example_request.json | grep -q interval_80_low_usd
+          docker logs nba | tail -5
+          docker rm -f nba

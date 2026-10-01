@@ -86,13 +86,13 @@ Evaluated on the held-out 2024-25 season (350 players):
 
 | Metric | Value |
 |---|---|
-| R² (log salary) | **0.741** |
+| R² (log salary) | **0.733** (v1.1; the notebook run reported 0.741 with early stopping on the test season) |
 | MAE (log scale) | **0.293** |
-| MAE (dollars) | **$1,390,130** |
+| MAE (dollars) | **$1,406,161** |
 
 The model explains 74.1% of salary variance from statistical performance alone. The remaining 25.9% reflects factors outside the data: the vintage of each contract relative to cap growth, position scarcity on individual rosters, marketability, injury history beyond games-played, and negotiating dynamics.
 
-An MAE of $1.39M means the model's prediction is within roughly one mid-level exception of the true contract value for the average player — a reasonable bound given the noise sources above.
+An MAE of $1.41M means the model's prediction is within roughly one mid-level exception of the true contract value for the average player — a reasonable bound given the noise sources above.
 
 ---
 

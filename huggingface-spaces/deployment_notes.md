@@ -2,7 +2,7 @@
 
 **Target Space SDK:** Streamlit
 **Entry file:** `app.py` (this directory)
-**Status:** Prepared and ready to deploy. NOT pushed.
+**Status:** Live at https://huggingface.co/spaces/bass990/NBA-Contract-Value-Analyzer (publish with `python scripts/publish_space.py` after `hf auth login`).
 
 ## What the Space needs from this repo
 

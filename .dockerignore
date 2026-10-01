@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+.git
+.github
+data/raw/
+notebooks/
+*.ipynb
+# website/ is bundled: the API serves it at /
+assets/
+huggingface-spaces/
+docs/
+build_notebook.py
+setup.ps1

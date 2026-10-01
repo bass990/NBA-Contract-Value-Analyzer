@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=1.2" />
 </head>
 <body>
 
@@ -36,11 +36,11 @@
       </p>
       <div class="hero-stats">
         <div class="stat-card">
-          <span class="stat-number">0.741</span>
+          <span class="stat-number">0.733</span>
           <span class="stat-label">Test R²</span>
         </div>
         <div class="stat-card">
-          <span class="stat-number">$1.39M</span>
+          <span class="stat-number">$1.41M</span>
           <span class="stat-label">Mean Absolute Error</span>
         </div>
         <div class="stat-card">
@@ -57,6 +57,14 @@
   </header>
 
   <!-- Contract Explorer -->
+  <div class="disclosure" role="note">
+    <strong>Honest disclosure.</strong> The metrics on this page come from the pipeline's 1,400-row synthetic demo run
+    (the reproducibility fallback used because salary sources are Cloudflare-gated). On real scraped stats joined to a
+    hand-curated ~75-row salary set, development runs land at R² 0.68 to 0.74. Rows named <code>P_###</code> in the
+    explorer are synthetic players from that run; named players are 2024-25 salaries from Basketball-Reference with
+    model predictions extrapolated onto them. See <a href="#methodology">Methodology</a>.
+  </div>
+
   <section class="section" id="explorer">
     <div class="section-inner">
       <h2>Contract Explorer</h2>
@@ -86,6 +94,9 @@
             <option value="actual_desc">Highest Actual Salary</option>
             <option value="predicted_desc">Highest Predicted Salary</option>
           </select>
+        </div>
+        <div class="filter-group">
+          <label class="toggle"><input type="checkbox" id="show-synth" /> Show synthetic rows (P_###)</label>
         </div>
         <div class="filter-group">
           <label>Min minutes/game: <span id="mp-val">15</span></label>
@@ -122,10 +133,11 @@
     <div class="section-inner">
       <h2>Salary Estimator</h2>
       <p class="section-desc">
-        Enter a hypothetical player's statistics and see what the model would estimate
-        as their market salary. This uses the same feature logic as the trained pipeline —
-        per-36 normalization, position pay curves, and age polynomial.
-      </p>
+          Enter a hypothetical player's statistics. When the model API is reachable the estimate comes from the trained
+          LightGBM model itself, with its 80% interval and staleness flag; otherwise a hand-fitted approximation is used
+          and labelled as such. Stats the form does not ask for are derived from the ones it does.
+        </p>
+        <p class="api-status" id="api-status">Checking model API…</p>
 
       <div class="calc-grid">
         <div class="calc-col">
@@ -235,15 +247,15 @@
 
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="metric-value">0.741</div>
+          <div class="metric-value">0.733</div>
           <div class="metric-name">R² — Test Season</div>
           <div class="metric-desc">
-            The model explains 74.1% of salary variance from statistical performance.
-            The remaining 26% reflects contract timing, market premiums, and factors not in the stats.
+            The model explains 73.3% of salary variance from statistical performance.
+            The remaining 27% reflects contract timing, market premiums, and factors not in the stats.
           </div>
         </div>
         <div class="metric-card">
-          <div class="metric-value">$1.39M</div>
+          <div class="metric-value">$1.41M</div>
           <div class="metric-name">Mean Absolute Error</div>
           <div class="metric-desc">
             Average prediction error in dollars. Roughly equivalent to one mid-level exception —
@@ -251,10 +263,10 @@
           </div>
         </div>
         <div class="metric-card">
-          <div class="metric-value">90</div>
+          <div class="metric-value">85</div>
           <div class="metric-name">Boosting Rounds</div>
           <div class="metric-desc">
-            Model converged at round 90 with early stopping (patience = 50 rounds).
+            Model converged at round 85 with early stopping (patience = 50 rounds).
             Prevents overfitting on the small training set without manual round selection.
           </div>
         </div>
@@ -377,6 +389,6 @@
     </div>
   </footer>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=1.2"></script>
 </body>
 </html>

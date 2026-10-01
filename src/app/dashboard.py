@@ -337,8 +337,8 @@ st.markdown("""
       contracts diverge from market rate.
     </p>
     <div class="stat-cards">
-      <div class="stat-card"><span class="stat-number">0.741</span><span class="stat-label">Test R²</span></div>
-      <div class="stat-card"><span class="stat-number">$1.39M</span><span class="stat-label">Mean Absolute Error</span></div>
+      <div class="stat-card"><span class="stat-number">0.733</span><span class="stat-label">Test R² (v1.1)</span></div>
+      <div class="stat-card"><span class="stat-number">$1.41M</span><span class="stat-label">Mean Absolute Error</span></div>
       <div class="stat-card"><span class="stat-number">4</span><span class="stat-label">Seasons of Training Data</span></div>
       <div class="stat-card"><span class="stat-number">36</span><span class="stat-label">Model Features</span></div>
     </div>
@@ -607,23 +607,23 @@ with st.container():
     </div>
     <div class="metrics-grid">
       <div class="metric-card">
-        <div class="metric-value">0.741</div>
+        <div class="metric-value">0.733</div>
         <div class="metric-name">R² — Test Season</div>
-        <div class="metric-desc">The model explains 74.1% of salary variance from statistical
-        performance. The remaining 26% reflects contract timing, market premiums, and factors
+        <div class="metric-desc">The model explains 73.3% of salary variance from statistical
+        performance. The remaining 27% reflects contract timing, market premiums, and factors
         not in the stats.</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value">$1.39M</div>
+        <div class="metric-value">$1.41M</div>
         <div class="metric-name">Mean Absolute Error</div>
         <div class="metric-desc">Average prediction error in dollars — roughly equivalent to
         one mid-level exception. Within range for a stats-only model that cannot observe
         off-court factors.</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value">90</div>
+        <div class="metric-value">85</div>
         <div class="metric-name">Boosting Rounds</div>
-        <div class="metric-desc">Model converged at round 90 with early stopping (patience
+        <div class="metric-desc">Model converged at round 85 with early stopping (patience
         = 50 rounds). Prevents overfitting on the small training set without manual round
         selection.</div>
       </div>

@@ -1,0 +1,8 @@
+{
+ "note": "frozen by tests/test_contract.py::test_golden_predictions on first run",
+ "predicted_usd": [
+  18298293,
+  1615980,
+  4042159
+ ]
+}

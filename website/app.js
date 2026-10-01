@@ -7,7 +7,7 @@
 /* ── Player Data ─────────────────────────────────────────────────────────────
    Curated 2024-25 salary data for named players (from Basketball-Reference),
    supplemented by synthetic rotation players from the pipeline test set.
-   predicted_usd is the LightGBM model estimate (R² = 0.741, trained on
+   predicted_usd is the LightGBM model estimate (R² = 0.733 on the held-out 2025 season, trained on
    synthetic seasons; named-player predictions are model extrapolations).
    residual = predicted - actual.
    ─────────────────────────────────────────────────────────────────────────── */
@@ -103,8 +103,11 @@ let activePos = "ALL";
 let activeSort = "overpaid";
 let minMP = 15;
 
+const SHOW_SYNTH = () => !!document.getElementById("show-synth")?.checked;
+const isSynthetic = (p) => /^P_\d+$/.test(p.name);
+
 function getFilteredData() {
-  return PLAYERS
+  return PLAYERS.filter(p => SHOW_SYNTH() || !isSynthetic(p))
     .filter(p => (activePos === "ALL" || p.pos === activePos) && p.mp >= minMP)
     .sort((a, b) => {
       if (activeSort === "overpaid")      return a.residual - b.residual;
@@ -128,7 +131,7 @@ function renderTable() {
       ? `<span class="badge badge-red">Overpaid</span>`
       : `<span class="badge badge-green">Underpaid</span>`;
     return `<tr>
-      <td>${p.name}</td>
+      <td>${p.name}${isSynthetic(p) ? ' <span class="synth-badge" title="Synthetic player from the pipeline test set">synthetic</span>' : ''}</td>
       <td>${p.pos}</td>
       <td>${p.age}</td>
       <td>${p.mp.toFixed(1)}</td>
@@ -154,6 +157,8 @@ function initTable() {
   // Sort
   const sortSel = document.getElementById("sort-select");
   if (sortSel) sortSel.addEventListener("change", () => { activeSort = sortSel.value; renderTable(); });
+  const synth = document.getElementById("show-synth");
+  if (synth) synth.addEventListener("change", renderTable);
 
   // MP slider
   const mpSlider = document.getElementById("mp-filter");
@@ -183,7 +188,72 @@ function renderImportance() {
 }
 
 /* ── Salary Calculator ───────────────────────────────────────────────────── */
-function estimateSalary() {
+// The model API (api/main.py) when it is running; override with ?api=http://host:port
+// Candidates in order: ?api= override, the page's own origin (when the API serves the site), the local container.
+const API_CANDIDATES = [new URLSearchParams(location.search).get("api"), location.protocol.startsWith("http") ? location.origin : null, "http://127.0.0.1:8011"].filter(Boolean);
+let API_BASE = API_CANDIDATES[0];
+let apiUp = null;
+
+async function checkApi() {
+  const el = document.getElementById("api-status");
+  for (const base of API_CANDIDATES) {
+    try {
+      const r = await fetch(`${base}/health`, { signal: AbortSignal.timeout(2500) });
+      if (!r.ok) continue;
+      const h = await r.json();
+      if (!h || h.model_loaded === undefined) continue;   // some other server answered on this origin
+      API_BASE = base; apiUp = true;
+      if (el) el.textContent = `Model API online (${base}, version ${h.version || "?"}): estimates come from the trained model.`;
+      return;
+    } catch { /* try the next candidate */ }
+  }
+  apiUp = false;
+  if (el) el.textContent = `Model API not reachable (tried ${API_CANDIDATES.join(", ")}): estimates below use a hand-fitted approximation, not the trained model. Start it with \`make api\` or \`docker run -p 8011:8000 nba-api\`.`;
+}
+
+function formToPlayer() {
+  const v = (id, d) => +document.getElementById(id).value || d;
+  const age = v("c-age", 26), pos = document.getElementById("c-pos").value, g = v("c-g", 65), mp = v("c-mp", 30), gs = v("c-gs", 55);
+  const pts = v("c-pts", 18), trb = v("c-trb", 5), ast = v("c-ast", 4), fgp = v("c-fgp", 0.47), tpp = v("c-3pp", 0.37);
+  const per = v("c-per", 18), ws = v("c-ws", 5), bpm = v("c-bpm", 1.5), vorp = v("c-vorp", 2), usg = v("c-usg", 22);
+  // fields the form does not ask for, derived from the ones it does (documented on the page)
+  const fga = pts / Math.max(2 * fgp, 0.5), tpa = pts * 0.15, fta = pts * 0.22;
+  return {
+    Player: "Hypothetical", season: 2025, Age: age, Pos: pos, G: g, GS: gs, MP: mp,
+    PTS: pts, TRB: trb, AST: ast, STL: 0.8, BLK: 0.5, TOV: +(pts * 0.12).toFixed(2), FGA: +fga.toFixed(2), "3PA": +tpa.toFixed(2), FTA: +fta.toFixed(2),
+    "FG%": fgp, "3P%": tpp, "FT%": 0.78, "eFG%": Math.min(fgp + 0.04, 1), PER: per, "TS%": Math.min(fgp + 0.08, 1), "USG%": usg,
+    WS: ws, "WS/48": +(ws / Math.max(g * mp, 1) * 48).toFixed(3), BPM: bpm, OBPM: +(bpm * 0.6).toFixed(2), DBPM: +(bpm * 0.4).toFixed(2), VORP: vorp,
+  };
+}
+
+async function estimateViaApi() {
+  const r = await fetch(`${API_BASE}/predict`, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formToPlayer()), signal: AbortSignal.timeout(6000) });
+  if (!r.ok) throw new Error(`API ${r.status}`);
+  const d = await r.json();
+  const p = d.predictions ? d.predictions[0] : d;
+  const lo = p.interval_80_low_usd, hi = p.interval_80_high_usd;
+  document.getElementById("result-salary").textContent = fmtUSD(p.predicted_usd);
+  document.getElementById("result-breakdown").innerHTML = `
+    <div class="breakdown-item"><div class="bd-val">${p.tier || "—"}</div><div class="bd-label">Contract tier</div></div>
+    <div class="breakdown-item"><div class="bd-val">${lo != null ? fmtM(lo) + " – " + fmtM(hi) : "—"}</div><div class="bd-label">80% interval</div></div>
+    <div class="breakdown-item"><div class="bd-val">${(p.cap_pct_2025 ?? 0).toFixed(1)}%</div><div class="bd-label">of 2025 cap</div></div>
+    <div class="breakdown-item"><div class="bd-val">${p.stale ? "stale" : "current"}</div><div class="bd-label">model staleness flag</div></div>
+  `;
+  document.getElementById("result-display").style.display = "block";
+  const el = document.getElementById("api-status");
+  if (el) el.textContent = `Estimate from the trained model via ${API_BASE}/predict.`;
+}
+
+async function estimateSalary() {
+  if (apiUp === null) await checkApi();
+  if (apiUp) {
+    try { await estimateViaApi(); return; } catch (e) { apiUp = false; const el = document.getElementById("api-status"); if (el) el.textContent = `Model API failed (${e.message}); showing the hand-fitted approximation instead.`; }
+  }
+  estimateSalaryOffline();
+}
+
+function estimateSalaryOffline() {
   const age    = +document.getElementById("c-age").value  || 26;
   const pos    = document.getElementById("c-pos").value   || "SG";
   const g      = +document.getElementById("c-g").value    || 65;
@@ -207,7 +277,7 @@ function estimateSalary() {
   const ast36 = ast * 36 / safeMP;
 
   // Approximate log-salary model using the top feature weights
-  // Coefficients are calibrated against the synthetic run (R² = 0.741)
+  // Coefficients are calibrated against the synthetic run (model R² = 0.733)
   const agePrime = age >= 25 && age <= 30 ? 1 : 0;
   const ageDisc  = age > 33 ? -0.15 * (age - 33) : 0;
   const rookieDisc = age < 23 ? -0.4 : 0;
@@ -252,6 +322,7 @@ function estimateSalary() {
     <div class="breakdown-item"><div class="bd-val">${tier}</div><div class="bd-label">Contract tier</div></div>
     <div class="breakdown-item"><div class="bd-val">${tierNote}</div><div class="bd-label">Profile</div></div>
     <div class="breakdown-item"><div class="bd-val">${(salary / 140_600_000 * 100).toFixed(1)}%</div><div class="bd-label">of 2025 cap</div></div>
+    <div class="breakdown-item"><div class="bd-val">offline</div><div class="bd-label">hand-fitted approximation, not the model</div></div>
   `;
   document.getElementById("result-display").style.display = "block";
 }
@@ -272,6 +343,7 @@ function initCalculator() {
 
 /* ── Init ────────────────────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", () => {
+  checkApi();
   initTable();
   renderImportance();
   initCalculator();

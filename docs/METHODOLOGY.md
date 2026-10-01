@@ -95,11 +95,11 @@ The split:
 Inside training, hyperparameter tuning uses the last 15% of rows as a validation set (still chronologically before the test season).
 
 ### Metrics
-- **R² on log(salary):** The headline number. 0.741 on the synthetic run; 0.68-0.74 range on real-player data in development runs.
+- **R² on log(salary):** The headline number. 0.733 on the synthetic run (v1.1, early stopping on the 2024 validation season; the notebook run scored 0.741 because it early-stopped on the test season); 0.68-0.74 range on real-player data in development runs.
 - **MAE on log(salary):** Robust to heavy tails. 0.293 on the held-out season.
-- **MAE in dollars:** The number a non-technical reader actually understands. $1.39M on the synthetic run; higher on real data due to greater salary variance in actual contracts.
+- **MAE in dollars:** The number a non-technical reader actually understands. $1.41M on the synthetic run; higher on real data due to greater salary variance in actual contracts.
 
-### What R² = 0.741 means in plain language
+### What R² = 0.733 means in plain language
 About 28% of salary variation is *not* explained by performance stats. That 28% is age timing of contract, market premiums, role-on-team, and noise. We expect this gap; an R² of 1.0 would actually be suspicious (it would mean the model had memorized something it shouldn't).
 
 ---

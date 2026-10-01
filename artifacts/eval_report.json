@@ -1,0 +1,146 @@
+{
+ "trained_at": "2026-09-22T23:14:18.905525+00:00",
+ "data": "synthetic (src/pipeline/synthetic.py, seed 42); see README honest disclosure",
+ "training_seasons": [
+  2022,
+  2023
+ ],
+ "validation_season": 2024,
+ "test_season": 2025,
+ "n_train": 700,
+ "n_test": 350,
+ "best_iteration": 85,
+ "params": {
+  "learning_rate": 0.05,
+  "num_leaves": 31,
+  "min_data_in_leaf": 15,
+  "feature_fraction": 0.85,
+  "bagging_fraction": 0.85,
+  "lambda_l2": 1.0
+ },
+ "headline": {
+  "r2_log": 0.7328,
+  "mae_log": 0.2951,
+  "mae_usd": 1406161,
+  "mape": 0.257,
+  "interval_80_coverage": 0.78,
+  "interval_80_half_width_log": 0.4258
+ },
+ "by_salary_tier": [
+  {
+   "tier": "Bench / reserve",
+   "n": 303,
+   "mae_usd": 795377,
+   "mape": 0.236,
+   "bias_usd": -443738,
+   "coverage_80": 0.825
+  },
+  {
+   "tier": "Role player",
+   "n": 37,
+   "mae_usd": 4031025,
+   "mape": 0.392,
+   "bias_usd": -2176688,
+   "coverage_80": 0.486
+  },
+  {
+   "tier": "Starter",
+   "n": 7,
+   "mae_usd": 9135497,
+   "mape": 0.427,
+   "bias_usd": -9135497,
+   "coverage_80": 0.429
+  },
+  {
+   "tier": "Star",
+   "n": 2,
+   "mae_usd": 8651881,
+   "mape": 0.289,
+   "bias_usd": -8651881,
+   "coverage_80": 1.0
+  },
+  {
+   "tier": "Max contract",
+   "n": 1,
+   "mae_usd": 20756721,
+   "mape": 0.493,
+   "bias_usd": -20756721,
+   "coverage_80": 0.0
+  }
+ ],
+ "by_position": [
+  {
+   "position": "C",
+   "n": 69,
+   "mae_usd": 1517636,
+   "bias_usd": -490389
+  },
+  {
+   "position": "PF",
+   "n": 67,
+   "mae_usd": 1493282,
+   "bias_usd": -1173891
+  },
+  {
+   "position": "PG",
+   "n": 81,
+   "mae_usd": 979155,
+   "bias_usd": -695934
+  },
+  {
+   "position": "SF",
+   "n": 73,
+   "mae_usd": 1390597,
+   "bias_usd": -860564
+  },
+  {
+   "position": "SG",
+   "n": 60,
+   "mae_usd": 1776073,
+   "bias_usd": -1421995
+  }
+ ],
+ "top_features": [
+  {
+   "feature": "PER",
+   "gain_share": 0.2541
+  },
+  {
+   "feature": "WS",
+   "gain_share": 0.1887
+  },
+  {
+   "feature": "Age",
+   "gain_share": 0.1722
+  },
+  {
+   "feature": "VORP",
+   "gain_share": 0.1554
+  },
+  {
+   "feature": "Age_sq",
+   "gain_share": 0.0234
+  },
+  {
+   "feature": "is_starter",
+   "gain_share": 0.0201
+  },
+  {
+   "feature": "BPM",
+   "gain_share": 0.0185
+  },
+  {
+   "feature": "MP",
+   "gain_share": 0.017
+  },
+  {
+   "feature": "TS%",
+   "gain_share": 0.0165
+  },
+  {
+   "feature": "USG%",
+   "gain_share": 0.0156
+  }
+ ],
+ "note": "early stopping now uses the validation season, not the test season (the notebook run used the test season)"
+}

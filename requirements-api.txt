@@ -1,0 +1,9 @@
+# Lean runtime for the NBA FastAPI service. Excludes scraping (requests, bs4),
+# tuning (optuna), interpretability (shap), and the Streamlit/Plotly dashboard.
+fastapi==0.115.4
+uvicorn[standard]==0.32.0
+pydantic==2.9.2
+lightgbm>=4.5.0
+pandas>=2.2.3
+numpy>=2.0.0
+scikit-learn>=1.5.2

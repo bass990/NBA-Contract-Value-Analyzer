@@ -8,7 +8,7 @@ sdk_version: 1.39.0
 app_file: app.py
 pinned: false
 license: mit
-short_description: Predicts NBA market salary from on-court production; ranks over/underpaid contracts.
+short_description: NBA market salary from stats; flags over/underpaid deals
 ---
 
 # NBA Contract Value Analyzer
