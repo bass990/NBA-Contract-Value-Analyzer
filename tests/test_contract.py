@@ -65,8 +65,9 @@ def test_bundle_carries_v2_fields():
 def test_training_is_deterministic(tmp_path):
     """Retrain into a temp path and compare the held-out metrics with the committed bundle."""
     out, rep = tmp_path / "m.pkl", tmp_path / "r.json"
-    subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "train.py"), "--out", str(out), "--report", str(rep)],
-                   check=True, capture_output=True, cwd=PROJECT_ROOT, timeout=600)
+    proc = subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "train.py"), "--out", str(out), "--report", str(rep)],
+                          capture_output=True, text=True, cwd=PROJECT_ROOT, timeout=600, check=False)
+    assert proc.returncode == 0, f"train.py failed (exit {proc.returncode}):\n{proc.stderr[-2000:]}"
     fresh = load_model(out)
     assert fresh["test_r2"] == pytest.approx(BUNDLE["test_r2"], abs=1e-9)
     assert fresh["test_mae_usd"] == pytest.approx(BUNDLE["test_mae_usd"], abs=1.0)

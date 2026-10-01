@@ -31,7 +31,6 @@ from pathlib import Path
 
 import lightgbm as lgb
 import numpy as np
-import optuna
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, r2_score
 
@@ -39,8 +38,9 @@ from ..pipeline.features import MODEL_FEATURES
 
 logger = logging.getLogger(__name__)
 
-# Suppress Optuna's chatter unless you really want it
-optuna.logging.set_verbosity(optuna.logging.WARNING)
+# optuna is imported inside tune_hyperparameters(): it is a tuning-only dependency and
+# is deliberately absent from requirements-api.txt, which the lean API image and CI use.
+# scripts/train.py imports _prepare_xy from this module and must work without it.
 
 
 @dataclass
@@ -81,13 +81,17 @@ def _tune(X_train: pd.DataFrame, y_train: pd.Series, n_trials: int = 30) -> dict
     """Optuna search. Uses internal validation split inside the training set."""
     # Hold out the last season inside the training set for HP tuning so we don't
     # touch the real test season.
+    import optuna  # tuning-only dependency, see the note at the top of the module
+
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+
     # X_train must have a 'season' aux column hidden; we use index-based split here.
     n = len(X_train)
     split = int(n * 0.85)
     X_tr, X_val = X_train.iloc[:split], X_train.iloc[split:]
     y_tr, y_val = y_train.iloc[:split], y_train.iloc[split:]
 
-    def objective(trial: optuna.Trial) -> float:
+    def objective(trial) -> float:
         params = {
             "objective": "regression",
             "metric": "mae",
